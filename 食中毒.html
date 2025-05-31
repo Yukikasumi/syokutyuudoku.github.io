@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>食中毒予防学習ツール</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Tailwind Customizations (if any) */
+        body {
+            font-family: 'Inter', sans-serif; /* Tailwind default sans-serif is good */
+        }
+        .nav-btn.active-nav {
+            background-color: #2563eb; /* blue-600 */
+            font-weight: bold;
+        }
+        /* For better visual feedback on quiz options */
+        .quiz-option-label.selected {
+            background-color: #e0f2fe; /* sky-100 */
+            border-color: #0ea5e9; /* sky-500 */
+        }
+        .quiz-option-label.correct {
+            background-color: #dcfce7; /* green-100 */
+            border-color: #22c55e; /* green-500 */
+        }
+        .quiz-option-label.incorrect {
+            background-color: #fee2e2; /* red-100 */
+            border-color: #ef4444; /* red-500 */
+        }
+        /* Simple animation for feedback visibility */
+        .feedback-enter {
+            opacity: 0;
+            transform: translateY(-10px);
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <header class="bg-sky-600 text-white p-4 shadow-md sticky top-0 z-40">
+        <h1 class="text-xl md:text-2xl font-bold text-center">食中毒予防学習ツール</h1>
+    </header>
+
+    <nav class="bg-sky-500 text-white flex flex-wrap justify-center space-x-2 sm:space-x-4 p-2 sticky top-[64px] z-40 shadow">
+        <button id="nav-home" class="nav-btn p-2 rounded hover:bg-sky-700 transition-colors duration-150 text-sm sm:text-base">ホーム</button>
+        <button id="nav-simulation" class="nav-btn p-2 rounded hover:bg-sky-700 transition-colors duration-150 text-sm sm:text-base">シミュレーション</button>
+        <button id="nav-quiz" class="nav-btn p-2 rounded hover:bg-sky-700 transition-colors duration-150 text-sm sm:text-base">クイズ</button>
+    </nav>
+
+    <main class="p-4 md:p-8 max-w-4xl mx-auto">
+        <section id="home-section" class="content-section bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-semibold mb-4 text-sky-700">食中毒から身を守ろう！</h2>
+            <p class="mb-3 text-gray-700">
+                食中毒は、細菌やウイルス、有毒な物質が含まれた食べ物を食べることによって起こる健康被害です。
+                多くの場合、吐き気、嘔吐、腹痛、下痢などの症状が現れますが、時には重症化することもあります。
+            </p>
+            <p class="mb-3 text-gray-700">
+                このツールでは、食中毒を予防するための基本的な知識をシミュレーションとクイズを通して学ぶことができます。
+                正しい知識を身につけ、日々の生活で実践することが、あなたとあなたの大切な人を食中毒から守る第一歩です。
+            </p>
+            <div class="mt-6 p-4 bg-sky-100 border-l-4 border-sky-500 text-sky-700 rounded-md">
+                <h3 class="font-bold text-lg mb-2">食中毒予防の三原則</h3>
+                <ul class="list-disc list-inside space-y-1">
+                    <li><strong>つけない：</strong>細菌やウイルスを食べ物に「つけない」こと。手洗いや調理器具の洗浄・消毒が重要です。</li>
+                    <li><strong>増やさない：</strong>食べ物に付着した細菌を「増やさない」こと。低温での保存が基本です。</li>
+                    <li><strong>やっつける：</strong>食べ物や調理器具に付着した細菌やウイルスを「やっつける」こと。十分な加熱処理が効果的です。</li>
+                </ul>
+            </div>
+            <p class="mt-6 text-gray-700">
+                上のナビゲーションから「シミュレーション」や「クイズ」を選んで、学習を始めてみましょう！
+            </p>
+        </section>
+
+        <section id="simulation-section" class="content-section hidden bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-semibold mb-6 text-sky-700 text-center">危険予知シミュレーション</h2>
+            <div id="simulation-content" class="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-inner min-h-[300px]">
+                </div>
+            <div class="mt-6 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                <button id="prev-sim-btn" class="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition-colors duration-150">前のシナリオ</button>
+                <span id="sim-counter" class="text-sm text-gray-600"></span>
+                <button id="next-sim-btn" class="w-full sm:w-auto bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded transition-colors duration-150">次のシナリオ</button>
+            </div>
+        </section>
+
+        <section id="quiz-section" class="content-section hidden bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-semibold mb-6 text-sky-700 text-center">食中毒予防クイズ</h2>
+            <div id="quiz-content" class="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-inner min-h-[250px]">
+                </div>
+            <div id="quiz-feedback" class="mt-4 p-3 rounded-md text-sm min-h-[50px]"></div>
+            <div id="quiz-navigation" class="mt-4 flex flex-col sm:flex-row justify-center items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                 <button id="submit-answer-btn" class="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition-colors duration-150">回答する</button>
+                 <button id="next-question-btn" class="w-full sm:w-auto bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded hidden transition-colors duration-150">次の問題へ</button>
+            </div>
+             <div id="quiz-score" class="mt-6 text-xl font-semibold text-center text-sky-700"></div>
+        </section>
+    </main>
+
+    <footer class="text-center p-4 mt-8 bg-gray-100 text-gray-600 text-sm border-t border-gray-200">
+        <p>&copy; 2025 食中毒予防学習プロジェクト</p>
+        <p>情報参照元: <a href="https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/shokuhin/syokuchu/index.html" target="_blank" rel="noopener noreferrer" class="text-sky-500 hover:underline">厚生労働省 食中毒関係情報</a></p>
+    </footer>
+
+    <div id="message-modal" class="fixed inset-0 bg-gray-800 bg-opacity-60 overflow-y-auto h-full w-full flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white p-5 rounded-lg shadow-xl w-full max-w-md mx-auto">
+            <div class="flex justify-between items-center mb-3">
+                <h3 id="message-modal-title" class="text-lg font-medium leading-6 text-gray-900">お知らせ</h3>
+                <button id="message-modal-close-btn-icon" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="mt-2">
+                <p id="message-modal-text" class="text-sm text-gray-600"></p>
+            </div>
+            <div class="mt-4 text-right">
+                <button id="message-modal-close-btn" class="px-4 py-2 bg-sky-500 text-white text-base font-medium rounded-md hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-300 transition-colors duration-150">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- Data ---
+    const simulations = [
+        {
+            id: 'sim1',
+            title: '危険！室温放置',
+            badPractice: {
+                description: '調理後のカレーを鍋に入れたまま、一晩室温で放置してしまいました。これは安全でしょうか？',
+                visual_text: '鍋に入ったカレーがキッチンカウンターに置かれている。時計は夜中を指している。',
+                consequence_title: '危険！ウェルシュ菌食中毒のリスク',
+                consequence_text: 'ウェルシュ菌などの細菌は、特にカレーやシチューのような煮込み料理で増殖しやすいです。これらの菌は熱に強い芽胞（がほう）を作ることがあり、室温で長時間放置されると急激に増殖し、再加熱しても死滅しにくい毒素を産生することがあります。食後数時間で腹痛や下痢を引き起こす可能性があります。',
+                consequence_visual_text: 'カレーの中で細菌が急速に増えているイメージ。'
+            },
+            correctPractice: {
+                title: '正しい対処法：速やかな冷却と保存',
+                description: '調理後の食品は、食中毒菌が増殖しやすい温度帯（約20℃～50℃）に長く置かないことが重要です。粗熱を素早く取り（例：鍋ごと氷水につける、浅い容器に小分けする）、速やかに冷蔵庫（10℃以下）または冷凍庫（-15℃以下）で保存しましょう。再加熱する際は、中心部まで十分に（75℃で1分以上を目安に）加熱します。',
+                visual_text: 'カレーが小分けにされて冷蔵庫に保存されているイメージ。'
+            },
+            learnMoreLink: 'https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/shokuhin/syokuchu/04.html' // MHLW Welchii
+        },
+        {
+            id: 'sim2',
+            title: '危険！二次汚染',
+            badPractice: {
+                description: '生の鶏肉を切ったまな板と包丁を、洗わずにそのままサラダ用のキュウリを切るのに使ってしまいました。',
+                visual_text: 'まな板の上に生の鶏肉の汁が残り、その上でキュウリが切られている。',
+                consequence_title: '危険！カンピロバクターやサルモネラ菌による二次汚染',
+                consequence_text: '生の鶏肉にはカンピロバクターやサルモネラ菌などの食中毒菌が付着している可能性が高いです。これらの菌が付着したまな板や包丁を洗浄せずに他の食材（特に生で食べる野菜など）に使用すると、菌が移ってしまいます（二次汚染）。少量の菌でも食中毒を引き起こすことがあり、数日後に発熱、腹痛、下痢、嘔吐などの症状が出ることがあります。',
+                consequence_visual_text: '鶏肉からまな板へ、まな板からキュウリへと細菌が移っていくイメージ。'
+            },
+            correctPractice: {
+                title: '正しい対処法：調理器具の洗浄・消毒と使い分け',
+                description: '生の肉や魚を切ったまな板や包丁は、使用後すぐに洗剤でよく洗い、熱湯消毒や食品用アルコール、キッチン用漂白剤で殺菌しましょう。また、調理の順番を工夫し、生で食べる野菜などを先に切り、その後に肉や魚を切るようにするのも効果的です。可能であれば、肉用・魚用・野菜用とまな板を使い分けるのが最も安全です。',
+                visual_text: 'きれいに洗浄されたまな板、または野菜専用のまな板でキュウリが切られているイメージ。'
+            },
+            learnMoreLink: 'https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/shokuhin/syokuchu/03.html' // MHLW Campylobacter
+        },
+        {
+            id: 'sim3',
+            title: '危険！不十分な手洗い',
+            badPractice: {
+                description: 'トイレに行った後、水でサッと手を濡らしただけで調理を再開しようとしています。',
+                visual_text: '蛇口から出る水で手のひらを一瞬濡らしているだけの様子。石鹸は使っていない。',
+                consequence_title: '危険！様々な細菌やウイルスの拡散',
+                consequence_text: 'トイレの後や、生の肉・魚・卵を触った後などには、目に見えない細菌やウイルスが手に付着している可能性があります。不十分な手洗いではこれらの病原体を十分に除去できず、食品や調理器具、ドアノブなどを介して他の人に感染を広げたり、食中毒を引き起こしたりする原因になります。',
+                consequence_visual_text: '手にたくさんの細菌が付着しているイメージ。その手で食材を触っている。'
+            },
+            correctPractice: {
+                title: '正しい対処法：石鹸を使った丁寧な手洗い',
+                description: '食中毒予防の基本は、石鹸を使った丁寧な手洗いです。指輪や時計を外し、流水で手を濡らした後、石鹸を十分に泡立て、手のひら、手の甲、指の間、指先、爪の間、親指の周り、手首まで、最低でも20秒以上かけて洗いましょう。その後、流水で十分にすすぎ、清潔なタオルやペーパータオルで完全に乾かします。調理前、生の食材を扱った後、食事前、トイレの後などは特に重要です。',
+                visual_text: '石鹸で丁寧に手を洗っている各ステップのイラスト（泡立て、指の間、爪、手首など）。'
+            },
+            learnMoreLink: 'https://www.mhlw.go.jp/content/000502264.pdf' // MHLW Handwashing PDF
+        }
+    ];
+
+    const quizzes = [
+        {
+            id: 'q1',
+            question: '食中毒予防の三原則「つけない」「増やさない」「やっつける」。このうち「つけない」ために最も重要な行動はどれですか？',
+            options: [
+                { text: '調理前に石鹸で丁寧に手を洗う', correct: true },
+                { text: '購入した肉や魚をすぐに冷蔵庫に入れる', correct: false },
+                { text: '野菜を加熱調理する', correct: false },
+                { text: '賞味期限の切れたものは食べない', correct: false }
+            ],
+            explanation: '調理前の手洗いは、手に付着している可能性のある細菌やウイルスを食材や調理器具に「つけない」ための非常に重要なステップです。「増やさない」は低温保存、「やっつける」は加熱殺菌が主に関わります。'
+        },
+        {
+            id: 'q2',
+            question: '多くの食中毒菌やウイルスを殺菌するために推奨される、肉料理の中心部の加熱温度と時間の目安はどれですか？',
+            options: [
+                { text: '60℃で30秒', correct: false },
+                { text: '75℃で1分以上', correct: true },
+                { text: '100℃で10秒', correct: false },
+                { text: '50℃で5分', correct: false }
+            ],
+            explanation: '多くの食中毒菌は75℃で1分以上の加熱で死滅します。ノロウイルスの場合は85～90℃で90秒以上が推奨されます。特にひき肉料理や大きな塊の肉は中心部まで火が通りにくいので、温度計で確認するなど注意が必要です。'
+        },
+        {
+            id: 'q3',
+            question: '冷蔵庫で食品を保存する際の適切な温度として、一般的に推奨されているのは何度以下ですか？',
+            options: [
+                { text: '15℃以下', correct: false },
+                { text: '10℃以下', correct: true },
+                { text: '20℃以下', correct: false },
+                { text: '0℃以下（これは冷凍）', correct: false }
+            ],
+            explanation: '冷蔵庫の温度は10℃以下、できれば5℃程度で管理することが、細菌の増殖を抑えるのに効果的です。冷凍庫は-15℃以下が目安です。温度計で庫内温度を定期的に確認しましょう。'
+        },
+        {
+            id: 'q4',
+            question: '生の魚介類が原因となる食中毒で、特に夏場に注意が必要な細菌は何ですか？',
+            options: [
+                { text: 'ウェルシュ菌', correct: false },
+                { text: '腸炎ビブリオ', correct: true },
+                { text: '黄色ブドウ球菌', correct: false },
+                { text: 'ボツリヌス菌', correct: false }
+            ],
+            explanation: '腸炎ビブリオは海水中に存在し、水温が上昇する夏場に活発に増殖します。生の魚介類に付着し、食中毒の原因となります。予防には、購入後は速やかに低温で保存し、調理前には真水（水道水）でよく洗い、加熱調理する場合は中心部まで十分に加熱することが重要です。'
+        }
+    ];
+
+    // --- DOM Elements ---
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const contentSections = document.querySelectorAll('.content-section');
+    const homeSection = document.getElementById('home-section');
+    const simulationSection = document.getElementById('simulation-section');
+    const quizSection = document.getElementById('quiz-section');
+
+    // Simulation Elements
+    const simulationContentEl = document.getElementById('simulation-content');
+    const prevSimBtn = document.getElementById('prev-sim-btn');
+    const nextSimBtn = document.getElementById('next-sim-btn');
+    const simCounterEl = document.getElementById('sim-counter');
+
+    // Quiz Elements
+    const quizContentEl = document.getElementById('quiz-content');
+    const quizFeedbackEl = document.getElementById('quiz-feedback');
+    const submitAnswerBtn = document.getElementById('submit-answer-btn');
+    const nextQuestionBtn = document.getElementById('next-question-btn');
+    const quizScoreEl = document.getElementById('quiz-score');
+    
+    // Modal Elements
+    const messageModal = document.getElementById('message-modal');
+    const messageModalTitle = document.getElementById('message-modal-title');
+    const messageModalText = document.getElementById('message-modal-text');
+    const messageModalCloseBtn = document.getElementById('message-modal-close-btn');
+    const messageModalCloseBtnIcon = document.getElementById('message-modal-close-btn-icon');
+
+
+    // --- State Variables ---
+    let currentSection = 'home';
+    let currentSimulationIndex = 0;
+    let currentQuizIndex = 0;
+    let quizScore = 0;
+    let quizAnswered = false;
+
+    // --- Functions ---
+
+    // Navigation
+    function setActiveSection(sectionId) {
+        currentSection = sectionId;
+        contentSections.forEach(section => {
+            section.classList.add('hidden');
+        });
+        document.getElementById(sectionId + '-section').classList.remove('hidden');
+
+        navButtons.forEach(btn => {
+            btn.classList.remove('active-nav');
+            if (btn.id === 'nav-' + sectionId) {
+                btn.classList.add('active-nav');
+            }
+        });
+
+        // Initialize section if needed
+        if (sectionId === 'simulation') {
+            loadSimulation(currentSimulationIndex);
+        } else if (sectionId === 'quiz') {
+            loadQuiz(currentQuizIndex);
+            quizScore = 0; // Reset score when quiz section is entered
+            updateScoreDisplay();
+        }
+    }
+    
+    // Simulation Logic
+    function loadSimulation(index) {
+        const sim = simulations[index];
+        simulationContentEl.innerHTML = `
+            <h3 class="text-xl font-semibold mb-3 text-sky-700">${sim.title}</h3>
+            <div class="mb-4 p-3 bg-white rounded shadow">
+                <p class="mb-2 text-gray-700">${sim.badPractice.description}</p>
+                <div class="my-2 p-3 border border-dashed border-gray-300 h-auto min-h-[60px] flex items-center justify-center text-gray-600 text-sm bg-gray-50 rounded">
+                    ${sim.badPractice.visual_text}
+                </div>
+            </div>
+            <div class="space-y-3">
+                <button id="show-consequence-btn" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition-colors duration-150">この行動の問題点は？</button>
+                <div id="sim-consequence" class="hidden p-3 bg-red-50 border-l-4 border-red-500 text-red-700 rounded shadow-sm">
+                    <h4 class="font-bold">${sim.badPractice.consequence_title}</h4>
+                    <p class="text-sm">${sim.badPractice.consequence_text}</p>
+                    <div class="my-2 p-3 border border-dashed border-red-200 h-auto min-h-[60px] flex items-center justify-center text-red-600 text-sm bg-red-50 rounded">
+                        ${sim.badPractice.consequence_visual_text}
+                    </div>
+                </div>
+                <button id="show-correct-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition-colors duration-150">正しい対処法は？</button>
+                <div id="sim-correct-practice" class="hidden p-3 bg-green-50 border-l-4 border-green-500 text-green-700 rounded shadow-sm">
+                    <h4 class="font-bold">${sim.correctPractice.title}</h4>
+                    <p class="text-sm">${sim.correctPractice.description}</p>
+                    <div class="my-2 p-3 border border-dashed border-green-200 h-auto min-h-[60px] flex items-center justify-center text-green-600 text-sm bg-green-50 rounded">
+                        ${sim.correctPractice.visual_text}
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 mt-2 text-right">
+                    さらに詳しく: <a href="${sim.learnMoreLink}" target="_blank" rel="noopener noreferrer" class="text-sky-500 hover:underline">関連情報を見る</a>
+                </p>
+            </div>
+        `;
+        updateSimCounter();
+
+        // Add event listeners for the new buttons
+        document.getElementById('show-consequence-btn').addEventListener('click', () => {
+            document.getElementById('sim-consequence').classList.toggle('hidden');
+        });
+        document.getElementById('show-correct-btn').addEventListener('click', () => {
+            document.getElementById('sim-correct-practice').classList.toggle('hidden');
+        });
+    }
+
+    function updateSimCounter() {
+        simCounterEl.textContent = `シナリオ ${currentSimulationIndex + 1} / ${simulations.length}`;
+    }
+
+    // Quiz Logic
+    function loadQuiz(index) {
+        quizAnswered = false;
+        const q = quizzes[index];
+        quizContentEl.innerHTML = `
+            <p class="text-md sm:text-lg font-medium mb-4 text-gray-800">${index + 1}. ${q.question}</p>
+            <div id="quiz-options" class="space-y-2">
+                ${q.options.map((opt, i) => `
+                    <label class="quiz-option-label block p-3 border-2 border-gray-300 rounded-md hover:bg-sky-50 cursor-pointer transition-colors duration-150">
+                        <input type="radio" name="quizOption" value="${i}" class="mr-2 accent-sky-500">
+                        <span class="text-gray-700">${opt.text}</span>
+                    </label>
+                `).join('')}
+            </div>
+        `;
+        quizFeedbackEl.innerHTML = '';
+        quizFeedbackEl.className = 'mt-4 p-3 rounded-md text-sm min-h-[50px]'; // Reset class
+        submitAnswerBtn.classList.remove('hidden');
+        nextQuestionBtn.classList.add('hidden');
+        updateScoreDisplay();
+
+        // Add event listeners for radio buttons to give visual feedback on selection
+        document.querySelectorAll('input[name="quizOption"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                document.querySelectorAll('.quiz-option-label').forEach(label => {
+                    label.classList.remove('selected', 'border-sky-500');
+                    label.classList.add('border-gray-300');
+                });
+                if (radio.checked) {
+                    radio.closest('label').classList.add('selected', 'border-sky-500');
+                    radio.closest('label').classList.remove('border-gray-300');
+                }
+            });
+        });
+    }
+
+    function handleSubmitAnswer() {
+        if (quizAnswered) return;
+
+        const selectedOption = document.querySelector('input[name="quizOption"]:checked');
+        if (!selectedOption) {
+            // Using custom modal for alerts
+            showMessageModal("選択肢を選んでください。", "注意");
+            return;
+        }
+        quizAnswered = true;
+        const answerIndex = parseInt(selectedOption.value);
+        const question = quizzes[currentQuizIndex];
+        const correct = question.options[answerIndex].correct;
+
+        const optionLabels = document.querySelectorAll('.quiz-option-label');
+        optionLabels.forEach((label, i) => {
+            label.classList.remove('selected', 'border-sky-500');
+            label.classList.add(question.options[i].correct ? 'correct' : 'incorrect');
+            if (i === answerIndex) {
+                // Keep border prominent on selected
+                label.classList.add(question.options[i].correct ? 'border-green-600' : 'border-red-600');
+            } else {
+                 label.classList.add(question.options[i].correct ? 'border-green-500' : 'border-red-500');
+            }
+        });
+
+
+        if (correct) {
+            quizScore++;
+            quizFeedbackEl.innerHTML = `<strong class="text-green-700">正解！</strong> ${question.explanation}`;
+            quizFeedbackEl.className = 'mt-4 p-3 rounded-md text-sm bg-green-100 border border-green-300 text-green-800 feedback-enter';
+        } else {
+            quizFeedbackEl.innerHTML = `<strong class="text-red-700">不正解...</strong> ${question.explanation}`;
+            quizFeedbackEl.className = 'mt-4 p-3 rounded-md text-sm bg-red-100 border border-red-300 text-red-800 feedback-enter';
+        }
+        updateScoreDisplay();
+        submitAnswerBtn.classList.add('hidden');
+        nextQuestionBtn.classList.remove('hidden');
+
+        if (currentQuizIndex === quizzes.length - 1) {
+            nextQuestionBtn.textContent = '結果を見る';
+        } else {
+            nextQuestionBtn.textContent = '次の問題へ';
+        }
+    }
+    
+    function handleNextQuestion() {
+        currentQuizIndex++;
+        if (currentQuizIndex < quizzes.length) {
+            loadQuiz(currentQuizIndex);
+        } else {
+            // End of quiz
+            quizContentEl.innerHTML = `
+                <p class="text-xl font-semibold text-center text-sky-700">クイズ終了！</p>
+                <p class="text-center mt-4 text-gray-700">あなたのスコアは <strong class="text-2xl text-sky-600">${quizScore}</strong> / ${quizzes.length} です。</p>
+                <p class="text-center mt-2 text-sm text-gray-600">${getQuizResultMessage()}</p>
+            `;
+            quizFeedbackEl.innerHTML = '';
+            nextQuestionBtn.classList.add('hidden');
+            // Optionally, add a button to restart quiz or go to home
+            const restartButton = document.createElement('button');
+            restartButton.textContent = 'もう一度挑戦する';
+            restartButton.className = 'w-full sm:w-auto mt-6 bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded transition-colors duration-150 block mx-auto';
+            restartButton.onclick = () => {
+                currentQuizIndex = 0;
+                quizScore = 0;
+                loadQuiz(currentQuizIndex);
+            };
+            quizContentEl.appendChild(restartButton);
+        }
+    }
+
+    function getQuizResultMessage() {
+        const percentage = (quizScore / quizzes.length) * 100;
+        if (percentage === 100) return "素晴らしい！全問正解です。食中毒予防の知識はバッチリですね！";
+        if (percentage >= 75) return "よくできました！ほとんど正解です。この調子で食中毒予防を心がけましょう。";
+        if (percentage >= 50) return "まずまずです。間違えたところを復習して、さらに知識を深めましょう。";
+        return "もう少し頑張りましょう。シミュレーションや解説をもう一度確認して、食中毒予防のポイントをしっかり覚えましょう。";
+    }
+
+    function updateScoreDisplay() {
+        quizScoreEl.textContent = `スコア: ${quizScore} / ${quizzes.length}`;
+    }
+
+    // Modal functions
+    function showMessageModal(text, title = "お知らせ") {
+        messageModalTitle.textContent = title;
+        messageModalText.textContent = text;
+        messageModal.classList.remove('hidden');
+    }
+
+    function hideMessageModal() {
+        messageModal.classList.add('hidden');
+    }
+
+    // --- Event Listeners ---
+    navButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const sectionName = button.id.split('-')[1]; // e.g., 'nav-home' -> 'home'
+            setActiveSection(sectionName);
+        });
+    });
+
+    prevSimBtn.addEventListener('click', () => {
+        currentSimulationIndex = (currentSimulationIndex - 1 + simulations.length) % simulations.length;
+        loadSimulation(currentSimulationIndex);
+    });
+
+    nextSimBtn.addEventListener('click', () => {
+        currentSimulationIndex = (currentSimulationIndex + 1) % simulations.length;
+        loadSimulation(currentSimulationIndex);
+    });
+
+    submitAnswerBtn.addEventListener('click', handleSubmitAnswer);
+    nextQuestionBtn.addEventListener('click', handleNextQuestion);
+    
+    messageModalCloseBtn.addEventListener('click', hideMessageModal);
+    messageModalCloseBtnIcon.addEventListener('click', hideMessageModal);
+
+
+    // --- Initial Setup ---
+    setActiveSection('home'); // Start with the home section
+
+// Removed the erroneous }); that was here
+</script>
+
+</body>
+</html>
